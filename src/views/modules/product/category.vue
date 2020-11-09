@@ -9,6 +9,7 @@
     <el-button v-if="draggable" type="primary" @click="submitDraggable"
       >提交拖拽结果</el-button
     >
+    <el-button type="danger" @click="batchDelete">批量删除</el-button>
     <el-tree
       @node-click="nodeClick"
       show-checkbox
@@ -20,6 +21,7 @@
       :draggable="draggable"
       :allow-drop="allowDrop"
       @node-drop="handleDrop"
+      ref="menuTree"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -85,9 +87,9 @@ export default {
   props: {},
   data() {
     return {
-      curCatPidListExpand:[],
+      curCatPidListExpand: [],
       updateNodes: [],
-      curCatPid: '',
+      curCatPid: "",
       draggable: false,
       maxLevel: 0,
       isEdit: "",
@@ -112,17 +114,48 @@ export default {
     };
   },
   methods: {
+    //批量删除功能
+    batchDelete() {
+      let treeNodes = this.$refs.menuTree.getCheckedNodes();
+      let catIds = [];
+      let catNames = [];
+      if (treeNodes && treeNodes.length > 0) {
+        for (let i = 0; i < treeNodes.length; i++) {
+          catIds.push(treeNodes[i].catId);
+          catNames.push(treeNodes[i].name);
+        }
+        this.$confirm(`是否批量删除当前【${catNames}】菜单?`, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        })
+          .then(() => {
+            this.$http({
+              url: this.$http.adornUrl("/product/category/delete"),
+              method: "post",
+              data: this.$http.adornData(catIds, false),
+            }).then(({ data }) => {
+              this.getMenus();
+              this.$message.success("批量删除菜单成功");
+            });
+          })
+          .catch(() => {
+            this.$message.info("已取消删除")
+          });
+      }
+    },
+    //提交拖拽结果
     submitDraggable() {
       this.$http({
-      url: this.$http.adornUrl('/product/category/updateList'),
-      method: 'post',
-      data: this.$http.adornData(this.updateNodes,false)
-      }).then(({data}) => {
+        url: this.$http.adornUrl("/product/category/updateList"),
+        method: "post",
+        data: this.$http.adornData(this.updateNodes, false),
+      }).then(({ data }) => {
         this.$message.success("菜单拖拽修改成功");
-         this.getMenus();
+        this.getMenus();
         this.expandedKey = this.curCatPidListExpand;
         this.curCatPidListExpand = [];
-      })
+      });
     },
     //拖拽成功完成时触发的事件
     handleDrop(draggingNode, dropNode, dropType, ev) {
@@ -130,34 +163,49 @@ export default {
       //0.需要确定拖拽完成后，被拖动节点的一下三种信息
       let curDragNodeChildNodes = []; //当前拖动节点的兄弟节点
       //1.确定当前被拖动节点的父Id
-      if(dropType == "inner"){
+      if (dropType == "inner") {
         this.curCatPid = dropNode.data.catId;
         curDragNodeChildNodes = dropNode.childNodes;
         this.curCatPidListExpand.push(this.curCatPid);
-      }else{
-        this.curCatPid = dropNode.parent.data.catId == undefined ? 0 : dropNode.parent.data.catId;
+      } else {
+        this.curCatPid =
+          dropNode.parent.data.catId == undefined
+            ? 0
+            : dropNode.parent.data.catId;
         curDragNodeChildNodes = dropNode.parent.childNodes;
       }
       //2.确定当前被拖动节点的所有同级兄弟的排序
-      if(curDragNodeChildNodes != null && curDragNodeChildNodes.length > 0){
-        for(let i = 0; i< curDragNodeChildNodes.length; i++){
+      if (curDragNodeChildNodes != null && curDragNodeChildNodes.length > 0) {
+        for (let i = 0; i < curDragNodeChildNodes.length; i++) {
           let curBrotherNode = curDragNodeChildNodes[i];
           //如果此遍历节点是当前拖拽的节点，则进行第3步的逻辑处理
-          if(curBrotherNode.data.catId == draggingNode.data.catId){
-            this.updateNodes.push({catId:curBrotherNode.data.catId,parentCid:this.curCatPid,sort:i,catLevel:curBrotherNode.level});
-            debugger
-            if(curBrotherNode.childNodes != null && curBrotherNode.childNodes.length > 0){
-              for(let i = 0;i < curBrotherNode.childNodes.length;i++){
-                this.updateNodes.push({catId:curBrotherNode.childNodes[i].data.catId,catLevel:curBrotherNode.level + 1});
+          if (curBrotherNode.data.catId == draggingNode.data.catId) {
+            this.updateNodes.push({
+              catId: curBrotherNode.data.catId,
+              parentCid: this.curCatPid,
+              sort: i,
+              catLevel: curBrotherNode.level,
+            });
+            debugger;
+            if (
+              curBrotherNode.childNodes != null &&
+              curBrotherNode.childNodes.length > 0
+            ) {
+              for (let i = 0; i < curBrotherNode.childNodes.length; i++) {
+                this.updateNodes.push({
+                  catId: curBrotherNode.childNodes[i].data.catId,
+                  catLevel: curBrotherNode.level + 1,
+                });
               }
             }
           }
-          this.updateNodes.push({catId:curBrotherNode.data.catId,sort:i});
+          this.updateNodes.push({ catId: curBrotherNode.data.catId, sort: i });
         }
       }
       //3.确定被拖动节点的子节点的层级
-      
-      console.log(this.updateNodes);
+
+      //这样应该会有重复的节点提交？？？
+      console.log("将要更新的节点数据" + this.updateNodes);
     },
     nodeClick(data, node) {
       console.log(node);
@@ -167,13 +215,13 @@ export default {
       this.getCurMaxLevel(draggingNode);
       let deep = this.maxLevel - draggingNode.level + 1; //要拖拽的数据的深度
       if (type === "inner") {
-        //存在一个bug，把当前三级分类拖拽到当前的一级分类中，成为二级分类 
+        //存在一个bug，把当前三级分类拖拽到当前的一级分类中，成为二级分类
         //虽然是 1+1=2 < 3 但是element界面还是不行
         //结论： 已经在此父节点下的所有节点都不能在次拖动到此父节点中(inner)，即使有些返回true
         //好像也不能将第三级的菜单，拖拽到父节点的已展开的同级菜单中(未展开的可以拖动)
-        return (deep + dropNode.level) <= 3;
+        return deep + dropNode.level <= 3;
       } else {
-        return (deep + dropNode.level) <= 4;
+        return deep + dropNode.level <= 4;
       }
     },
     getCurMaxLevel(node) {
