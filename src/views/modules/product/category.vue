@@ -186,7 +186,6 @@ export default {
               sort: i,
               catLevel: curBrotherNode.level,
             });
-            debugger;
             if (
               curBrotherNode.childNodes != null &&
               curBrotherNode.childNodes.length > 0
@@ -208,22 +207,18 @@ export default {
       console.log("将要更新的节点数据" + this.updateNodes);
     },
     nodeClick(data, node) {
-      console.log(node);
     },
     //以最多三级分类为条件，判断是否能拖拽到指定位置
     allowDrop(draggingNode, dropNode, type) {
       this.getCurMaxLevel(draggingNode);
-      let deep = this.maxLevel - draggingNode.level + 1; //要拖拽的数据的深度
+      let deep = this.maxLevel - draggingNode.level + 1; //要拖拽的数据的深度(包含它自身)
       if (type === "inner") {
-        //存在一个bug，把当前三级分类拖拽到当前的一级分类中，成为二级分类
-        //虽然是 1+1=2 < 3 但是element界面还是不行
-        //结论： 已经在此父节点下的所有节点都不能在次拖动到此父节点中(inner)，即使有些返回true
-        //好像也不能将第三级的菜单，拖拽到父节点的已展开的同级菜单中(未展开的可以拖动)
         return deep + dropNode.level <= 3;
       } else {
         return deep + dropNode.level <= 4;
       }
     },
+    // 获取当前拖动元素的最深层级
     getCurMaxLevel(node) {
       this.maxLevel = node.level; //设置最大层级就是它自己,防止它没有子元素
       if (node.childNodes != null && node.childNodes.length > 0) {

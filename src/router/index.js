@@ -52,6 +52,7 @@ const router = new Router({
   mode: 'hash',
   scrollBehavior: () => ({ y: 0 }),
   isAddDynamicMenuRoutes: false, // 是否已经添加动态(菜单)路由
+  // concat该方法不会改变现有的数组，而仅仅会返回被连接数组的一个副本。
   routes: globalRoutes.concat(mainRoutes)
 })
 
