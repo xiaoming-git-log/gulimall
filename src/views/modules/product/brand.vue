@@ -225,9 +225,7 @@ export default {
     },
     // 删除
     deleteHandle(id) {
-      var ids = id
-        ? [id]
-        : this.dataListSelections.map((item) => {
+      var ids = id? [id]: this.dataListSelections.map((item) => {
             return item.brandId;
           });
       this.$confirm(
