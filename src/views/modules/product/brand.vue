@@ -63,6 +63,9 @@
         align="center"
         label="品牌logo地址"
       >
+      <template slot-scope="scope">
+          <img style="width: 100px; height: 80px" :src="scope.row.logo"/>
+        </template>
       </el-table-column>
       <el-table-column
         prop="descript"
@@ -169,15 +172,15 @@ export default {
     this.getDataList();
   },
   methods: {
-    updateBrandStatus(row){
-      let {brandId,showStatus} = row;
+    updateBrandStatus(row) {
+      let { brandId, showStatus } = row;
       this.$http({
-      url: this.$http.adornUrl('/product/brand/update'),
-      method: 'post',
-      data: this.$http.adornData({brandId,showStatus},false)
-      }).then(({data}) => {
-        this.$message.success("状态更新成功")
-      })
+        url: this.$http.adornUrl("/product/brand/update"),
+        method: "post",
+        data: this.$http.adornData({ brandId, showStatus }, false),
+      }).then(({ data }) => {
+        this.$message.success("状态更新成功");
+      });
     },
     // 获取数据列表
     getDataList() {
@@ -225,7 +228,9 @@ export default {
     },
     // 删除
     deleteHandle(id) {
-      var ids = id? [id]: this.dataListSelections.map((item) => {
+      var ids = id
+        ? [id]
+        : this.dataListSelections.map((item) => {
             return item.brandId;
           });
       this.$confirm(
