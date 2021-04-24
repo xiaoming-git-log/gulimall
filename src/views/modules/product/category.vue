@@ -203,7 +203,6 @@ export default {
       }
       //3.确定被拖动节点的子节点的层级
 
-      //这样应该会有重复的节点提交？？？
       console.log("将要更新的节点数据" + this.updateNodes);
     },
     nodeClick(data, node) {
@@ -232,7 +231,7 @@ export default {
     },
     getMenus() {
       this.$http({
-        url: this.$http.adornUrl("/product/category/list"),
+        url: this.$http.adornUrl("/product/category/list/tree"),
         method: "get",
       }).then(({ data }) => {
         //结构表达式{data},就相当于res.data
