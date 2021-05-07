@@ -112,7 +112,14 @@ export default {
   //计算属性 类似于data概念
   computed: {},
   //监控data中的数据变化
-  watch: {},
+  watch: {
+    innerVisible : {
+      handler(newVal, oldal) {
+        this.dataForm.key = '';
+      },
+      deep: true,
+    },
+  },
   //方法集合
   methods: {
     selectionChangeHandle(val) {
@@ -163,7 +170,6 @@ export default {
     submitAddRealtion() {
       this.innerVisible = false;
       //准备数据
-      console.log("准备新增的数据", this.innerdataListSelections);
       if (this.innerdataListSelections.length > 0) {
         let postData = [];
         this.innerdataListSelections.forEach(item => {
